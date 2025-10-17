@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超声波测距问题动画演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .problem {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+        }
+
+        .problem h2 {
+            color: #667eea;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .problem p {
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .known-data {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .known-data h3 {
+            color: #1976d2;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .known-data ul {
+            list-style: none;
+            padding-left: 10px;
+        }
+
+        .known-data li {
+            padding: 5px 0;
+            color: #555;
+        }
+
+        .known-data li::before {
+            content: "▸ ";
+            color: #1976d2;
+            font-weight: bold;
+        }
+
+        .questions {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .questions h3 {
+            color: #f57c00;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .questions ol {
+            padding-left: 30px;
+            color: #555;
+        }
+
+        .questions li {
+            padding: 5px 0;
+            line-height: 1.6;
+        }
+
+        .canvas-container {
+            position: relative;
+            background: #f0f0f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        button.pause-btn {
+            background: linear-gradient(135deg, #FFA726 0%, #FB8C00 100%);
+        }
+
+        button.pause-btn:hover {
+            box-shadow: 0 5px 20px rgba(255, 167, 38, 0.4);
+        }
+
+        button.reset-btn {
+            background: linear-gradient(135deg, #66BB6A 0%, #43A047 100%);
+        }
+
+        button.reset-btn:hover {
+            box-shadow: 0 5px 20px rgba(102, 187, 106, 0.4);
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f5f5f5;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .control-group label {
+            font-weight: bold;
+            color: #555;
+            font-size: 14px;
+        }
+
+        select {
+            padding: 8px 15px;
+            border: 2px solid #667eea;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #667eea;
+            cursor: pointer;
+            background: white;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        select:hover {
+            border-color: #764ba2;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            font-weight: normal;
+            color: #555;
+        }
+
+        .radio-group input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .info-panel {
+            background: #fff;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 150px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .info-panel h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .info-text {
+            color: #555;
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        .highlight {
+            background: #fff176;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .answer {
+            background: #c8e6c9;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #4caf50;
+        }
+
+        .answer strong {
+            color: #2e7d32;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid #333;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .status-playing {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .status-paused {
+            background: #ffecb3;
+            color: #f57f17;
+        }
+
+        .status-stopped {
+            background: #e0e0e0;
+            color: #616161;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 超声波测距问题 - 动画演示</h1>
+
+        <div class="problem">
+            <h2>📝 题目</h2>
+            <p>小刚和小红突发奇想,在各自的跑车上装上了一个测速仪,并在赛车场的直行路段使用,想利用测速仪进行测速与定位。</p>
+            <p>已知小刚和小红均<strong>向北匀速行驶</strong>,且<strong>小红开在小刚前方</strong>,某时刻小刚向前发出一个信号,小红也同时向后发出信号,1s后,小刚收到小红发出的信号,又过了2.4s收到自己发出的信号。</p>
+
+            <div class="known-data">
+                <h3>已知条件:</h3>
+                <ul>
+                    <li>小刚车速: v₁ = 60 m/s</li>
+                    <li>超声波速度: v声 = 340 m/s</li>
+                    <li>小刚收到小红信号时间: t₁ = 1 s</li>
+                    <li>小刚收到自己信号时间: t₂ = 3.4 s</li>
+                </ul>
+            </div>
+
+            <div class="questions">
+                <h3>求解问题:</h3>
+                <ol>
+                    <li>两人发出信号时的距离为多少米?</li>
+                    <li>小红的车速为多少 m/s?</li>
+                    <li>小红发出信号后经多少秒收到自己发出的信号?</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4CAF50;"></div>
+                <span>小刚(后车)和他的超声波</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #F44336;"></div>
+                <span>小红(前车)和她的超声波</span>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="animationCanvas" width="1000" height="350"></canvas>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <button id="startBtn" onclick="startAnimation()">▶️ 开始动画</button>
+                <button id="pauseBtn" class="pause-btn" onclick="togglePause()" disabled>⏸️ 暂停</button>
+                <button id="resetBtn" class="reset-btn" onclick="resetAnimation()">🔄 重置</button>
+                <span id="statusIndicator" class="status-indicator status-stopped">已停止</span>
+            </div>
+
+            <div class="control-row">
+                <div class="control-group">
+                    <label>播放速度:</label>
+                    <select id="speedSelect" onchange="changeSpeed()">
+                        <option value="0.25">0.25x (极慢)</option>
+                        <option value="0.5" selected>0.5x (慢速)</option>
+                        <option value="1">1x (正常)</option>
+                        <option value="1.5">1.5x (快速)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>信号显示:</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="displayMode" value="point" checked onchange="changeDisplayMode()">
+                            <span>点模式</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="displayMode" value="line" onchange="changeDisplayMode()">
+                            <span>线模式</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <h3>📊 实时说明</h3>
+            <div class="info-text" id="infoText">
+                点击"开始动画"按钮观看完整演示过程
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('animationCanvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const speedSelect = document.getElementById('speedSelect');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const infoText = document.getElementById('infoText');
+
+        // 物理参数
+        const v_xiaogang = 60;      // 小刚车速 m/s
+        const v_xiaohong = 140;     // 小红车速 m/s
+        const v_sound = 340;        // 声速 m/s
+        const initial_distance = 400; // 初始距离 m
+
+        // 动画参数
+        const scale = 1.0;          // 像素/米的比例
+        let timeScale = 0.5;        // 动画时间缩放(加速播放)
+        let animationTime = 0;      // 当前动画时间(秒)
+        let animationId = null;
+        let lastTime = 0;
+        let isPaused = false;
+        let displayMode = 'point';  // 'point' or 'line'
+        let hasStoppedAtOne = false;  // 是否已经在1秒时停止过
+
+        // 画布参数
+        const startX = 100;         // 起始X坐标
+        const roadY = 150;          // 道路Y坐标
+
+        // 信号数据
+        let signals = [];
+
+        class Signal {
+            constructor(type, startPos, direction, startTime, yOffsetGo, yOffsetReturn) {
+                this.type = type;           // 'xiaogang' or 'xiaohong'
+                this.startPos = startPos;   // 起始位置(像素)
+                this.direction = direction; // 1: 向右, -1: 向左
+                this.startTime = startTime;
+                this.yOffsetGo = yOffsetGo;         // 去程Y轴偏移量
+                this.yOffsetReturn = yOffsetReturn; // 回程Y轴偏移量
+                this.reflected = false;
+                this.reflectTime = 0;
+                this.reflectPos = 0;
+                this.completed = false;
+                this.finalPos = 0;          // 记录最终位置
+            }
+
+            getPosition(t) {
+                if (this.completed) return null;
+
+                const elapsed = t - this.startTime;
+                if (elapsed < 0) return null;
+
+                if (!this.reflected) {
+                    // 去程：按声速和方向传播
+                    return this.startPos + this.direction * v_sound * scale * elapsed;
+                } else {
+                    // 回程：反向传播
+                    const afterReflect = t - this.reflectTime;
+                    return this.reflectPos - this.direction * v_sound * scale * afterReflect;
+                }
+            }
+        }
+
+        function drawCar(x, y, color, label, direction) {
+            // 缩小车辆尺寸
+            const width = 35;
+            const height = 20;
+
+            // 车身
+            ctx.fillStyle = color;
+            ctx.fillRect(x - width/2, y - height/2, width, height);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x - width/2, y - height/2, width, height);
+
+            // 车窗
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(x - width/2 + 5, y - height/2 + 3, width - 10, height - 6);
+
+            // 车轮
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(x - width/2 + 8, y + height/2 + 3, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + width/2 - 8, y + height/2 + 3, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 方向箭头（指向前方）
+            ctx.fillStyle = '#FFF';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('→', x, y + 5);
+
+            // 标签
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x, y - 20);
+        }
+
+        function drawCarPath(startX, currentX, color, label) {
+            // 在道路下方绘制车辆行驶轨迹
+            const pathY = roadY + 50;  // 道路下方50像素
+
+            // 绘制轨迹线
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = 0.7;
+            ctx.beginPath();
+            ctx.moveTo(startX, pathY);
+            ctx.lineTo(currentX, pathY);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+
+            // 在起点标记
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(startX, pathY, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 在终点标记当前位置（小圆点）
+            ctx.beginPath();
+            ctx.arc(currentX, pathY, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 标签（在轨迹线上方）
+            ctx.fillStyle = color;
+            ctx.font = 'bold 11px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(label, startX + 5, pathY - 8);
+        }
+
+        function drawSignalPoint(x, y, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 波纹效果
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+        }
+
+        function drawSignalLine(signal, currentPos, showCompletePath) {
+            const color = signal.type === 'xiaogang' ? '#4CAF50' : '#F44336';
+
+            // 去程路径
+            const yGo = roadY + signal.yOffsetGo;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = 0.6;
+
+            ctx.beginPath();
+            ctx.moveTo(signal.startPos, yGo);
+
+            if (!signal.reflected) {
+                // 还在去程中
+                ctx.lineTo(currentPos, yGo);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+
+                // 绘制当前位置的信号点
+                drawSignalPoint(currentPos, yGo, color);
+            } else {
+                // 去程已完成，绘制完整去程路径
+                ctx.lineTo(signal.reflectPos, yGo);
+                ctx.stroke();
+
+                // 标注反射点（在两条路径之间）
+                const yMid = roadY + (signal.yOffsetGo + signal.yOffsetReturn) / 2;
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = color;
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('↻', signal.reflectPos, yMid);
+
+                // 绘制连接线（从去程到回程）
+                ctx.setLineDash([3, 3]);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 1;
+                ctx.globalAlpha = 0.4;
+                ctx.beginPath();
+                ctx.moveTo(signal.reflectPos, yGo);
+                const yReturn = roadY + signal.yOffsetReturn;
+                ctx.lineTo(signal.reflectPos, yReturn);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // 绘制回程路径
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+                ctx.globalAlpha = 0.6;
+                ctx.setLineDash([8, 4]); // 虚线表示回程
+                ctx.beginPath();
+                ctx.moveTo(signal.reflectPos, yReturn);
+                ctx.lineTo(currentPos, yReturn);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.globalAlpha = 1;
+
+                // 绘制当前位置的信号点
+                if (!signal.completed || showCompletePath) {
+                    drawSignalPoint(currentPos, yReturn, color);
+                }
+            }
+        }
+
+        function drawRoad() {
+            // 道路
+            ctx.fillStyle = '#555';
+            ctx.fillRect(0, roadY - 30, canvas.width, 60);
+
+            // 路中虚线
+            ctx.strokeStyle = '#FFF';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([20, 15]);
+            ctx.beginPath();
+            ctx.moveTo(0, roadY);
+            ctx.lineTo(canvas.width, roadY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 北方向指示（右侧）
+            ctx.fillStyle = '#FFF';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('北 →', canvas.width - 50, roadY - 50);
+        }
+
+        function drawInfo(t, pos_xiaogang_px, pos_xiaohong_px) {
+            // 时间显示
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(`时间: ${t.toFixed(2)} s`, 20, 30);
+
+            // 暂停提示
+            if (isPaused) {
+                ctx.fillStyle = 'rgba(255, 152, 0, 0.9)';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('⏸️ 已暂停', canvas.width / 2, canvas.height - 30);
+            }
+        }
+
+        function updateInfoText(t) {
+            let text = '';
+
+            if (t < 0.1) {
+                text = `
+                    <p><span class="highlight">t = 0 秒</span>: 初始时刻</p>
+                    <p>• 小刚(绿车)和小红(红车)同时发出超声波信号</p>
+                    <p>• 小刚在后方,向<strong>前方(右)</strong>发出<strong>绿色</strong>信号</p>
+                    <p>• 小红在前方,向<strong>后方(左)</strong>发出<strong>红色</strong>信号</p>
+                    <p>• 初始距离: <span class="highlight">? m</span> (待求)</p>
+                `;
+            } else if (t < 1.0) {
+                text = `
+                    <p><span class="highlight">t = ${t.toFixed(2)} 秒</span></p>
+                    <p>• 两车都向右(北)前进</p>
+                    <p>• 小红的<strong>红色</strong>信号向左(后)传播,正在追赶小刚</p>
+                    <p>• 小刚的<strong>绿色</strong>信号向右(前)传播,正在追赶小红</p>
+                `;
+            } else if (t >= 1.0 && t < 3.4) {
+                // 1.0秒到3.4秒之间，显示问题1的解题步骤
+                text = `
+                    <div class="answer">
+                        <p><span class="highlight">t = 1.0 秒</span>: <strong>关键时刻1</strong></p>
+                        <p>✓ 小刚收到小红发出的<strong>红色</strong>信号!</p>
+                        <hr style="margin: 10px 0; border: none; border-top: 2px solid #4caf50;">
+                        <p><strong>📝 问题(1): 两人发出信号时的距离为多少米?</strong></p>
+                        <br>
+                        <p><strong>解题思路:</strong></p>
+                        <p>1️⃣ <strong>小红的超声波传播:</strong></p>
+                        <p>&nbsp;&nbsp;&nbsp;• 1秒内,超声波速度 v声 = 340 m/s</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 超声波向后走了: <strong>340 米</strong></p>
+                        <br>
+                        <p>2️⃣ <strong>小刚的车向前运动:</strong></p>
+                        <p>&nbsp;&nbsp;&nbsp;• 1秒内,小刚车速 v₁ = 60 m/s</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 小刚向前走了: <strong>60 米</strong></p>
+                        <br>
+                        <p>3️⃣ <strong>相向运动,距离相加:</strong></p>
+                        <p>&nbsp;&nbsp;&nbsp;• 初始距离 = 超声波走的距离 + 小刚走的距离</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 初始距离 = 340 + 60 = <strong>400 米</strong></p>
+                        <br>
+                        <p style="background: #fff176; padding: 8px; border-radius: 5px; font-weight: bold;">
+                        ✅ 答案: 初始距离 = 400 m</p>
+                    </div>
+                `;
+
+                // 如果在1.0-3.4秒之间，添加进度提示
+                if (t < 3.4) {
+                    text += `
+                        <hr style="margin: 15px 0; border: none; border-top: 1px dashed #ccc;">
+                        <p style="color: #666; font-style: italic;">
+                        📍 当前时间: ${t.toFixed(2)} 秒 | 动画继续进行中,等待3.4秒解答问题(2)和(3)...
+                        </p>
+                    `;
+                }
+            } else {
+                // t >= 3.4秒，显示所有三个问题的解题步骤
+                text = `
+                    <div class="answer">
+                        <h4 style="color: #2e7d32; margin-bottom: 10px;">🎉 演示完成!</h4>
+                        <p><span class="highlight">t = 3.4 秒</span>: <strong>关键时刻2</strong></p>
+                        <p>✓ 小刚收到自己发出的<strong>绿色</strong>信号(反射回来)</p>
+                        <p>✓ 小红也收到自己发出的<strong>红色</strong>信号(反射回来)</p>
+
+                        <hr style="margin: 15px 0; border: none; border-top: 2px solid #4caf50;">
+                        <p><strong>📝 问题(1): 两人发出信号时的距离为多少米?</strong></p>
+                        <p style="background: #fff176; padding: 8px; border-radius: 5px; font-weight: bold; margin: 10px 0;">
+                        ✅ 答案: 初始距离 = 400 m</p>
+                        <p><strong>解题思路:</strong> 超声波走340米 + 小刚走60米 = 400米</p>
+
+                        <hr style="margin: 15px 0; border: none; border-top: 2px solid #4caf50;">
+                        <p><strong>📝 问题(2): 小红的车速为多少 m/s?</strong></p>
+                        <br>
+                        <p><strong>解题思路:</strong></p>
+                        <p>1️⃣ <strong>声音来回总路程:</strong></p>
+                        <p>&nbsp;&nbsp;&nbsp;• 总时间: t = 3.4 秒</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 声音速度: v声 = 340 m/s</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 声音总路程 = 340 × 3.4 = <strong>1156 米</strong></p>
+                        <br>
+                        <p>2️⃣ <strong>设去程和回程:</strong></p>
+                        <p>&nbsp;&nbsp;&nbsp;• 设去程(小刚→小红): S₁</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 设回程(小红→小刚): S₂</p>
+                        <p>&nbsp;&nbsp;&nbsp;• S₁ + S₂ = 1156 米 ···①</p>
+                        <br>
+                        <p>3️⃣ <strong>小刚在3.4秒内前进:</strong></p>
+                        <p>&nbsp;&nbsp;&nbsp;• 小刚速度: v₁ = 60 m/s</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 小刚前进距离 = 60 × 3.4 = <strong>204 米</strong></p>
+                        <br>
+                        <p>4️⃣ <strong>去程和回程的关系:</strong></p>
+                        <p>&nbsp;&nbsp;&nbsp;• 回程路径 = 去程路径 - 小刚前进的距离</p>
+                        <p>&nbsp;&nbsp;&nbsp;• S₂ = S₁ - 204 ···②</p>
+                        <br>
+                        <p>5️⃣ <strong>联立方程求解:</strong></p>
+                        <p>&nbsp;&nbsp;&nbsp;• 将②代入①: S₁ + (S₁ - 204) = 1156</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 2S₁ - 204 = 1156</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 2S₁ = 1360</p>
+                        <p>&nbsp;&nbsp;&nbsp;• S₁ = <strong>680 米</strong></p>
+                        <br>
+                        <p>6️⃣ <strong>计算去程时间:</strong></p>
+                        <p>&nbsp;&nbsp;&nbsp;• 去程时间 = S₁ ÷ v声 = 680 ÷ 340 = <strong>2 秒</strong></p>
+                        <br>
+                        <p>7️⃣ <strong>求小红的速度:</strong></p>
+                        <p>&nbsp;&nbsp;&nbsp;• 2秒后,小红位置 = 680 米(从小刚初始位置算)</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 小红初始位置 = 400 米</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 小红2秒内前进 = 680 - 400 = <strong>280 米</strong></p>
+                        <p>&nbsp;&nbsp;&nbsp;• 小红速度 = 280 ÷ 2 = <strong>140 m/s</strong></p>
+                        <br>
+                        <p style="background: #fff176; padding: 8px; border-radius: 5px; font-weight: bold;">
+                        ✅ 答案: 小红车速 v₂ = 140 m/s</p>
+
+                        <hr style="margin: 15px 0; border: none; border-top: 2px solid #4caf50;">
+                        <p><strong>📝 问题(3): 小红发出信号后经多少秒收到自己发出的信号?</strong></p>
+                        <br>
+                        <p><strong>解题思路:</strong></p>
+                        <p>1️⃣ <strong>小红超声波去程(1秒):</strong></p>
+                        <p>&nbsp;&nbsp;&nbsp;• 从问题(1)已知: 1秒后超声波碰到小刚</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 设去程距离: S₅ = 340 米</p>
+                        <br>
+                        <p>2️⃣ <strong>设总时间为 t:</strong></p>
+                        <p>&nbsp;&nbsp;&nbsp;• 小红速度: v₂ = 140 m/s(已求出)</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 小红在t秒内走的距离: S₄ = 140t</p>
+                        <br>
+                        <p>3️⃣ <strong>超声波总路程:</strong></p>
+                        <p>&nbsp;&nbsp;&nbsp;• 超声波速度: v声 = 340 m/s</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 超声波t秒总路程 = 340t</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 设回程距离: S₆</p>
+                        <p>&nbsp;&nbsp;&nbsp;• S₅ + S₆ = 340t ···①</p>
+                        <br>
+                        <p>4️⃣ <strong>回程要追上移动的小红:</strong></p>
+                        <p>&nbsp;&nbsp;&nbsp;• 回程路径 = 小红走的距离 + 去程距离</p>
+                        <p>&nbsp;&nbsp;&nbsp;• S₆ = S₄ + S₅ ···②</p>
+                        <p>&nbsp;&nbsp;&nbsp;• S₆ = 140t + 340</p>
+                        <br>
+                        <p>5️⃣ <strong>联立方程求解:</strong></p>
+                        <p>&nbsp;&nbsp;&nbsp;• 将②代入①: 340 + (140t + 340) = 340t</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 680 + 140t = 340t</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 680 = 340t - 140t</p>
+                        <p>&nbsp;&nbsp;&nbsp;• 680 = 200t</p>
+                        <p>&nbsp;&nbsp;&nbsp;• t = 680 ÷ 200 = <strong>3.4 秒</strong></p>
+                        <br>
+                        <p style="background: #fff176; padding: 8px; border-radius: 5px; font-weight: bold;">
+                        ✅ 答案: 小红收到信号时间 = 3.4 s</p>
+
+                        <hr style="margin: 15px 0; border: none; border-top: 3px solid #2e7d32;">
+                        <p><strong>🎯 关键理解:</strong></p>
+                        <p>1️⃣ <strong>相向运动</strong>: 距离相加 (问题1)</p>
+                        <p>2️⃣ <strong>追及问题</strong>: 去程路径 - 移动距离 = 回程路径 (问题2)</p>
+                        <p>3️⃣ <strong>追赶问题</strong>: 回程要追上移动的目标 (问题3)</p>
+                        <p>4️⃣ <strong>列方程</strong>: 根据路程关系建立方程求解</p>
+                    </div>
+                `;
+            }
+
+            infoText.innerHTML = text;
+        }
+
+        function updateStatus() {
+            if (animationId === null) {
+                statusIndicator.className = 'status-indicator status-stopped';
+                statusIndicator.textContent = '已停止';
+            } else if (isPaused) {
+                statusIndicator.className = 'status-indicator status-paused';
+                statusIndicator.textContent = '已暂停';
+            } else {
+                statusIndicator.className = 'status-indicator status-playing';
+                statusIndicator.textContent = '播放中';
+            }
+        }
+
+        function animate(currentTime) {
+            if (!isPaused) {
+                if (lastTime === 0) lastTime = currentTime;
+                const deltaTime = (currentTime - lastTime) / 1000 * timeScale;
+                lastTime = currentTime;
+
+                animationTime += deltaTime;
+            }
+
+            // 计算车辆位置(像素坐标)
+            const pos_xiaogang_px = startX + v_xiaogang * scale * animationTime;
+            const pos_xiaohong_px = startX + initial_distance * scale + v_xiaohong * scale * animationTime;
+
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制道路(固定不动)
+            drawRoad();
+
+            // 绘制车辆行驶轨迹（在道路下方）
+            drawCarPath(startX, pos_xiaogang_px, '#4CAF50', '小刚路径');
+            drawCarPath(startX + initial_distance * scale, pos_xiaohong_px, '#F44336', '小红路径');
+
+            // 绘制车辆(向右移动)
+            drawCar(pos_xiaogang_px, roadY, '#4CAF50', '小刚', 1);
+            drawCar(pos_xiaohong_px, roadY, '#F44336', '小红', 1);
+
+            // 管理信号
+            if (animationTime >= 0 && signals.length === 0) {
+                // 创建初始信号
+                // 小刚的信号：向右(前)传播，去程在上方，回程在稍下方
+                signals.push(new Signal('xiaogang', pos_xiaogang_px, 1, 0, -20, -10));
+                // 小红的信号：向左(后)传播，去程在下方，回程在稍上方
+                signals.push(new Signal('xiaohong', pos_xiaohong_px, -1, 0, 20, 10));
+            }
+
+            // 更新和绘制信号
+            signals.forEach(signal => {
+                // 计算当前车辆位置用于反射判断
+                const xiaogang_pos = startX + v_xiaogang * scale * animationTime;
+                const xiaohong_pos = startX + initial_distance * scale + v_xiaohong * scale * animationTime;
+
+                // 获取信号当前位置
+                let signalPos = signal.getPosition(animationTime);
+
+                // 如果信号还在传播中，进行反射和完成判断
+                if (signalPos !== null && !signal.completed) {
+                    // 检查反射
+                    if (!signal.reflected) {
+                        if (signal.type === 'xiaogang') {
+                            // 小刚的绿色信号向右传播，检查是否追上小红
+                            if (signalPos >= xiaohong_pos) {
+                                signal.reflected = true;
+                                signal.reflectTime = animationTime;
+                                signal.reflectPos = xiaohong_pos;
+                            }
+                        } else {
+                            // 小红的红色信号向左传播，检查是否追上小刚
+                            if (signalPos <= xiaogang_pos) {
+                                signal.reflected = true;
+                                signal.reflectTime = animationTime;
+                                signal.reflectPos = xiaogang_pos;
+                            }
+                        }
+                    } else {
+                        // 检查是否返回到发送者
+                        if (signal.type === 'xiaogang') {
+                            // 绿色信号返回小刚
+                            if (signalPos <= xiaogang_pos) {
+                                signal.completed = true;
+                                signal.finalPos = xiaogang_pos;  // 保存最终位置
+                            }
+                        } else {
+                            // 红色信号返回小红
+                            if (signalPos >= xiaohong_pos) {
+                                signal.completed = true;
+                                signal.finalPos = xiaohong_pos;  // 保存最终位置
+                            }
+                        }
+                    }
+                }
+
+                // 绘制信号（包括已完成的信号）
+                const color = signal.type === 'xiaogang' ? '#4CAF50' : '#F44336';
+                // 根据是否反射选择Y坐标
+                const y = signal.reflected ?
+                    (roadY + signal.yOffsetReturn) :
+                    (roadY + signal.yOffsetGo);
+                // 使用最终位置（如果已完成）或当前位置
+                const displayPos = signal.completed ? signal.finalPos : signalPos;
+
+                if (displayPos !== null) {
+                    if (displayMode === 'line') {
+                        drawSignalLine(signal, displayPos, signal.completed);
+                    } else {
+                        // 点模式 - 只在未完成时显示点
+                        if (!signal.completed) {
+                            drawSignalPoint(displayPos, y, color);
+                        }
+                    }
+                }
+            });
+
+            // 绘制信息
+            drawInfo(animationTime, pos_xiaogang_px, pos_xiaohong_px);
+            if (!isPaused) {
+                updateInfoText(animationTime);
+            }
+
+            // 继续动画 - 先在1秒时停止展示第一题，然后继续到3.4秒
+            if (!hasStoppedAtOne && animationTime >= 1.0) {
+                // 第一次到达1秒，停止并展示第一题解答
+                animationId = null;
+                hasStoppedAtOne = true;
+                startBtn.disabled = false;
+                startBtn.textContent = '▶️ 继续播放';
+                pauseBtn.disabled = true;
+                updateStatus();
+                updateInfoText(1.0);
+            } else if (hasStoppedAtOne && animationTime < 3.4) {
+                // 已经在1秒停止过，继续播放到3.4秒
+                animationId = requestAnimationFrame(animate);
+            } else if (animationTime >= 3.4) {
+                // 到达3.4秒，最终停止
+                animationId = null;
+                startBtn.disabled = false;
+                startBtn.textContent = '▶️ 重新播放';
+                pauseBtn.disabled = true;
+                updateStatus();
+                updateInfoText(3.4);
+            } else if (!hasStoppedAtOne && animationTime < 1.0) {
+                // 还没到1秒，继续播放
+                animationId = requestAnimationFrame(animate);
+            }
+        }
+
+        function startAnimation() {
+            if (animationId !== null) {
+                cancelAnimationFrame(animationId);
+            }
+
+            // 如果在1秒时停止了，点击继续播放；否则重新开始
+            if (!hasStoppedAtOne || startBtn.textContent === '▶️ 重新播放') {
+                // 重新开始
+                animationTime = 0;
+                lastTime = 0;
+                signals = [];
+                isPaused = false;
+                hasStoppedAtOne = false;
+            } else {
+                // 从1秒继续播放
+                lastTime = 0; // 重置lastTime避免时间跳跃
+            }
+
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            pauseBtn.textContent = '⏸️ 暂停';
+
+            animationId = requestAnimationFrame(animate);
+            updateStatus();
+        }
+
+        function togglePause() {
+            if (animationId === null) return;
+
+            isPaused = !isPaused;
+
+            if (isPaused) {
+                pauseBtn.textContent = '▶️ 继续';
+            } else {
+                pauseBtn.textContent = '⏸️ 暂停';
+                lastTime = 0; // 重置时间避免跳跃
+            }
+
+            updateStatus();
+        }
+
+        function resetAnimation() {
+            if (animationId !== null) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+
+            animationTime = 0;
+            lastTime = 0;
+            signals = [];
+            isPaused = false;
+            hasStoppedAtOne = false;  // 重置停止标记
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawRoad();
+
+            // 初始位置
+            const pos_xiaogang_px = startX;
+            const pos_xiaohong_px = startX + initial_distance * scale;
+
+            // 绘制初始轨迹点（起点）
+            drawCarPath(startX, pos_xiaogang_px, '#4CAF50', '小刚路径');
+            drawCarPath(startX + initial_distance * scale, pos_xiaohong_px, '#F44336', '小红路径');
+
+            drawCar(pos_xiaogang_px, roadY, '#4CAF50', '小刚', 1);
+            drawCar(pos_xiaohong_px, roadY, '#F44336', '小红', 1);
+            drawInfo(0, pos_xiaogang_px, pos_xiaohong_px);
+
+            infoText.innerHTML = '点击"开始动画"按钮观看完整演示过程';
+            startBtn.disabled = false;
+            startBtn.textContent = '▶️ 开始动画';
+            pauseBtn.disabled = true;
+            pauseBtn.textContent = '⏸️ 暂停';
+            updateStatus();
+        }
+
+        function changeSpeed() {
+            timeScale = parseFloat(speedSelect.value);
+        }
+
+        function changeDisplayMode() {
+            const selected = document.querySelector('input[name="displayMode"]:checked');
+            displayMode = selected.value;
+        }
+
+        // 初始化
+        resetAnimation();
+    </script>
+</body>
+</html>
